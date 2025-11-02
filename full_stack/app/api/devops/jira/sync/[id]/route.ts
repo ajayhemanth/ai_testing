@@ -89,7 +89,7 @@ export async function POST(
         issuetype: {
           name: "Task"
         },
-        labels: testCase.compliance ? testCase.compliance.split(",") : []
+        labels: testCase.compliance ? testCase.compliance.split(",").map(t => t.trim()) : []
       }
     }
 
@@ -98,7 +98,7 @@ export async function POST(
       `${process.env.JIRA_EMAIL}:${process.env.JIRA_API_TOKEN}`
     ).toString("base64")
 
-    // If testCase already has jiraId, update it instead
+    // If testCase already has jiraId, try to update it, but create new if update fails
     if (testCase.jiraId) {
       const response = await fetch(
         `${process.env.JIRA_URL}/rest/api/3/issue/${testCase.jiraId}`,
@@ -118,12 +118,13 @@ export async function POST(
           jiraId: testCase.jiraId
         })
       } else {
-        return NextResponse.json(
-          { error: `Failed to update Jira issue: ${response.statusText}` },
-          { status: response.status }
-        )
+        // If update failed (e.g., Jira issue was deleted), create a new one instead
+        console.log(`Failed to update Jira issue ${testCase.jiraId}, creating new one instead`)
       }
-    } else {
+    }
+
+    // Create new Jira issue (either no jiraId or update failed)
+    {
       // Create new Jira issue
       const response = await fetch(
         `${process.env.JIRA_URL}/rest/api/3/issue`,

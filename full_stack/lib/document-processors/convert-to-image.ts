@@ -28,6 +28,17 @@ export async function convertDocumentToImages(
     case 'gif':
     case 'bmp':
       return await convertImageToStandardFormat(filePath)
+    case 'md':
+    case 'txt':
+    case 'text':
+    case 'markdown':
+      // Text files don't need image conversion, return empty result
+      return {
+        images: [],
+        pageCount: 1,
+        format: 'text',
+        imagePaths: []
+      }
     default:
       throw new Error(`Unsupported file type: ${ext}`)
   }
@@ -55,8 +66,16 @@ async function convertPdfToImages(filePath: string): Promise<ConversionResult> {
     }
   } catch (error) {
     console.error('Error converting PDF with pdf2pic:', error)
-    // Fallback to simple image if pdf2pic fails (e.g., GraphicsMagick not installed)
-    return await createFallbackImage(filePath, 'pdf')
+    console.log('Will use direct PDF extraction via Gemini API instead')
+
+    // Return a special result that indicates PDF should be processed directly
+    // This is similar to how we handle text files
+    return {
+      images: [],
+      pageCount: 1,
+      format: 'pdf-direct',  // Special format to indicate direct processing
+      imagePaths: []
+    }
   }
 }
 

@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  # ============================================
+  # Main Application
+  # ============================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NODE_ENV: production
+    container_name: digitide-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:/app/prisma/dev.db
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID:-}
+      - GCP_REGION=${GCP_REGION:-us-central1}
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+    volumes:
+      # Persist database
+      - ./prisma:/app/prisma
+      # Persist uploads and temp files
+      - ./uploads:/app/uploads
+      - ./temp:/app/temp
+      # Service account for Google Cloud (if using)
+      - ./service_account.json:/app/service_account.json:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - digitide-network
+
+  # ============================================
+  # PostgreSQL Database (Optional - for production)
+  # ============================================
+  # Uncomment this section if you want to use PostgreSQL instead of SQLite
+  # db:
+  #   image: postgres:16-alpine
+  #   container_name: digitide-db
+  #   restart: unless-stopped
+  #   environment:
+  #     - POSTGRES_USER=${POSTGRES_USER:-digitide}
+  #     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-digitide_password}
+  #     - POSTGRES_DB=${POSTGRES_DB:-digitide}
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+  #   networks:
+  #     - digitide-network
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-digitide}"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+  # ============================================
+  # Redis Cache (Optional - for production)
+  # ============================================
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: digitide-redis
+  #   restart: unless-stopped
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   networks:
+  #     - digitide-network
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+networks:
+  digitide-network:
+    driver: bridge
+
+# Uncomment volumes section if using PostgreSQL or Redis
+# volumes:
+#   postgres_data:
+#   redis_data:

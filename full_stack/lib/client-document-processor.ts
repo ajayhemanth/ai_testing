@@ -15,17 +15,39 @@ export class ClientDocumentProcessor {
   private analyzeResult: any = null
 
   async startProcessing(files: File[], projectId: string): Promise<string> {
-    // Start upload and return documentId immediately for SSE connection
-    const uploadResult = await this.uploadDocuments(files, projectId)
-    this.documentId = uploadResult.documentId
+    // Generate documentId on client side FIRST so UI can connect to SSE immediately
+    this.documentId = this.generateDocumentId()
     this.projectId = projectId
 
-    // Continue processing in the background
-    this.continueProcessing(uploadResult).catch(error => {
-      console.error('Background processing error:', error)
+    // Start upload in background (non-blocking)
+    this.uploadAndProcess(files, projectId).catch(error => {
+      console.error('Processing error:', error)
     })
 
+    // Return documentId immediately for SSE connection
     return this.documentId
+  }
+
+  private generateDocumentId(): string {
+    // Generate UUID v4 compatible ID on client side
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0
+      const v = c === 'x' ? r : (r & 0x3 | 0x8)
+      return v.toString(16)
+    })
+  }
+
+  private async uploadAndProcess(files: File[], projectId: string): Promise<void> {
+    try {
+      // Upload with pre-generated documentId
+      const uploadResult = await this.uploadDocuments(files, projectId, this.documentId)
+
+      // Continue processing pipeline
+      await this.continueProcessing(uploadResult)
+    } catch (error) {
+      console.error('Upload and process error:', error)
+      throw error
+    }
   }
 
   private async continueProcessing(uploadResult: any): Promise<void> {
@@ -55,12 +77,13 @@ export class ClientDocumentProcessor {
     }
   }
 
-  private async uploadDocuments(files: File[], projectId: string) {
+  private async uploadDocuments(files: File[], projectId: string, documentId: string) {
     const formData = new FormData()
     files.forEach(file => {
       formData.append('files', file)
     })
     formData.append('projectId', projectId)
+    formData.append('documentId', documentId)  // Pass pre-generated documentId
 
     const response = await fetch('/api/process/upload', {
       method: 'POST',

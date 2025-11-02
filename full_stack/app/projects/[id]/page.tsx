@@ -119,7 +119,8 @@ export default function ProjectDetailPage() {
     fetch('/api/requirements')
       .then(res => res.json())
       .then(data => {
-        const projectRequirements = data.filter((req: any) => req.projectId === projectId)
+        const allRequirements = data.requirements || data || []
+        const projectRequirements = allRequirements.filter((req: any) => req.projectId === projectId)
         setRequirements(projectRequirements)
       })
       .catch(err => console.error('Failed to fetch requirements:', err))
@@ -242,18 +243,18 @@ export default function ProjectDetailPage() {
             <Edit className="mr-2 h-4 w-4" />
             Edit Project
           </Button>
-          <Button variant="outline" onClick={() => setSettingsDialogOpen(true)}>
+          {/* <Button variant="outline" onClick={() => setSettingsDialogOpen(true)}>
             <Settings className="mr-2 h-4 w-4" />
             Settings
-          </Button>
-          <Button onClick={handleRunTests}>
+          </Button> */}
+          {/* <Button onClick={handleRunTests}>
             <Play className="mr-2 h-4 w-4" />
             Run Tests
-          </Button>
+          </Button> */}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Test Cases</CardDescription>
@@ -282,7 +283,7 @@ export default function ProjectDetailPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        {/* <Card>
           <CardHeader className="pb-2">
             <CardDescription>Compliance Score</CardDescription>
             <CardTitle className="text-2xl">{project.stats?.compliance || 0}%</CardTitle>
@@ -290,9 +291,9 @@ export default function ProjectDetailPage() {
           <CardContent>
             <Badge variant="outline">{project.targetCompliances}</Badge>
           </CardContent>
-        </Card>
+        </Card> */}
 
-        <Card>
+        {/* <Card>
           <CardHeader className="pb-2">
             <CardDescription>Code Coverage</CardDescription>
             <CardTitle className="text-2xl">{project.stats?.coverage || 0}%</CardTitle>
@@ -300,7 +301,7 @@ export default function ProjectDetailPage() {
           <CardContent>
             <Progress value={project.stats?.coverage || 0} className="h-2" />
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
 
       <Tabs defaultValue="test-cases" className="space-y-4">

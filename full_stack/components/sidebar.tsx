@@ -75,6 +75,7 @@ const navigation = [
         href: "/compliance",
         icon: Shield,
         badge: "Multi-region",
+        disabled: true,
       },
     ],
   },
@@ -85,11 +86,13 @@ const navigation = [
         title: "API Testing",
         href: "/api-testing",
         icon: Globe,
+        disabled: true,
       },
       {
         title: "Integrations",
         href: "/integrations",
         icon: Plug,
+        disabled: true,
       },
       {
         title: "DevOps Monitor",
@@ -107,12 +110,14 @@ const navigation = [
         href: "/knowledge-base",
         icon: Brain,
         badge: "Vertex AI",
+        disabled: true,
       },
       {
         title: "Agent Orchestration",
         href: "/agents",
         icon: Bot,
         badge: "Multi-agent",
+        disabled: true,
       },
     ],
   },
@@ -129,6 +134,7 @@ const navigation = [
         title: "Settings",
         href: "/settings",
         icon: Settings,
+        disabled: true,
       },
     ],
   },
@@ -158,6 +164,33 @@ export function Sidebar() {
               {section.items.map((item) => {
                 const Icon = item.icon
                 const isActive = pathname === item.href
+                const isDisabled = (item as any).disabled
+
+                if (isDisabled) {
+                  return (
+                    <div key={item.href}>
+                      <Button
+                        variant="ghost"
+                        className={cn(
+                          "w-full justify-start opacity-50 cursor-not-allowed"
+                        )}
+                        disabled
+                      >
+                        <Icon className="mr-2 h-4 w-4" />
+                        <span className="flex-1 text-left">{item.title}</span>
+                        {item.badge && (
+                          <Badge
+                            variant="secondary"
+                            className="ml-auto text-xs opacity-50"
+                          >
+                            {item.badge}
+                          </Badge>
+                        )}
+                      </Button>
+                    </div>
+                  )
+                }
+
                 return (
                   <Link key={item.href} href={item.href}>
                     <Button
@@ -191,7 +224,7 @@ export function Sidebar() {
             <Package className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             <div className="flex-1">
               <p className="text-sm font-medium">Google Cloud</p>
-              <p className="text-xs text-muted-foreground">Vertex AI Connected</p>
+              <p className="text-xs text-muted-foreground">Vertex AI</p>
             </div>
             <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
           </div>

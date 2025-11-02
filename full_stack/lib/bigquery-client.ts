@@ -2,7 +2,7 @@ import { BigQuery } from '@google-cloud/bigquery'
 import path from 'path'
 
 // Initialize BigQuery client
-const serviceAccountPath = path.join(process.cwd(), '..', 'service_account.json')
+const serviceAccountPath = path.join(process.cwd(), 'service_account.json')
 
 let bigqueryClient: BigQuery | null = null
 

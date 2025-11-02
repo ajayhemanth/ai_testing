@@ -21,14 +21,14 @@ export function Header() {
   return (
     <header className="flex h-16 items-center justify-between border-b bg-background px-6">
       <div className="flex flex-1 items-center space-x-4">
-        <div className="relative w-96">
+        {/* <div className="relative w-96">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
             placeholder="Search test cases, requirements, compliance..."
             className="pl-10"
           />
-        </div>
+        </div> */}
       </div>
 
       <div className="flex items-center space-x-4">
@@ -42,7 +42,7 @@ export function Header() {
           <span className="sr-only">Toggle theme</span>
         </Button>
 
-        <DropdownMenu>
+        {/* <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="h-5 w-5" />
@@ -79,7 +79,7 @@ export function Header() {
               </div>
             </DropdownMenuItem>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu> */}
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -93,7 +93,7 @@ export function Header() {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            {/* <DropdownMenuItem>
               <User className="mr-2 h-4 w-4" />
               Profile
             </DropdownMenuItem>
@@ -101,7 +101,7 @@ export function Header() {
               <Settings2 className="mr-2 h-4 w-4" />
               Settings
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator /> */}
             <DropdownMenuItem>Log out</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

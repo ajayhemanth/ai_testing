@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
 
     // Generate synthetic data using Gemini
     const genAI = new GoogleGenerativeAI(apiKey)
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' })
 
     const prompt = `You are a healthcare data expert specializing in generating synthetic test data that complies with medical standards.
 

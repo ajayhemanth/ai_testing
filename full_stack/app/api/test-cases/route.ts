@@ -53,6 +53,8 @@ export async function GET(request: NextRequest) {
         compliance: complianceStandards ? complianceStandards.split(', ') : [],
         complianceStandards,
         tags: testCase.tags,
+        jiraId: testCase.jiraId,
+        azureId: testCase.azureId,
         aiGenerated: true,
         createdAt: testCase.createdAt,
         updatedAt: testCase.updatedAt,

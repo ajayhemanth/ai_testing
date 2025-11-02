@@ -127,8 +127,14 @@ Only return valid JSON:`
 
     // Clean up common issues
     jsonText = jsonText
+      // Remove JavaScript-style comments
+      .replace(/\/\/.*$/gm, '')  // Remove single-line comments
+      .replace(/\/\*[\s\S]*?\*\//g, '')  // Remove multi-line comments
+      // Fix trailing commas
       .replace(/,\s*}/g, '}')
       .replace(/,\s*]/g, ']')
+      // Remove control characters (except valid whitespace)
+      .replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '')
       .trim()
 
     const parsed = JSON.parse(jsonText)

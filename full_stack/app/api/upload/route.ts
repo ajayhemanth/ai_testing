@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { writeFile, mkdir } from 'fs/promises'
-import path from 'path'
+import { uploadToGCS, downloadFromGCS } from '@/lib/storage'
 import { processDocuments, saveRequirementsToDatabase } from '@/lib/document-processors/process-documents'
 import { prisma } from '@/lib/prisma'
+import { writeFile, mkdir } from 'fs/promises'
+import path from 'path'
+import os from 'os'
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,8 +34,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const uploadDir = path.join(process.cwd(), 'uploads')
-    await mkdir(uploadDir, { recursive: true })
+    // Create temporary directory for processing
+    const tempDir = path.join(os.tmpdir(), `upload-${Date.now()}`)
+    await mkdir(tempDir, { recursive: true })
 
     const filePaths: string[] = []
     const uploadedFiles: any[] = []
@@ -44,14 +47,20 @@ export async function POST(request: NextRequest) {
 
       const timestamp = Date.now()
       const fileName = `${timestamp}-${file.name}`
-      const filePath = path.join(uploadDir, fileName)
 
-      await writeFile(filePath, buffer)
-      filePaths.push(filePath)
+      // Upload to GCS
+      const gcsPath = `${projectId}/${fileName}`
+      await uploadToGCS(buffer, gcsPath, file.type)
+
+      // Download to temp for processing
+      const tempFilePath = path.join(tempDir, fileName)
+      await writeFile(tempFilePath, buffer)
+      filePaths.push(tempFilePath)
 
       uploadedFiles.push({
         originalName: file.name,
         savedName: fileName,
+        gcsPath: gcsPath,
         size: file.size,
         type: file.type
       })

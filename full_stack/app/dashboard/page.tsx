@@ -315,18 +315,18 @@ export default function DashboardPage() {
                   <Pie
                     data={stats.testPriorities}
                     cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={80}
+                    cy="45%"
+                    outerRadius={60}
                     fill="#8884d8"
                     dataKey="count"
-                    label={({ priority, percent }) => `${priority} ${(percent * 100).toFixed(0)}%`}
+                    nameKey="priority"
                   >
                     {stats.testPriorities.map((entry: any, index: number) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
                   <Tooltip />
+                  <Legend wrapperStyle={{ fontSize: '11px' }} iconSize={8} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
@@ -350,18 +350,18 @@ export default function DashboardPage() {
                   <Pie
                     data={stats.testCategories}
                     cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={80}
+                    cy="45%"
+                    outerRadius={60}
                     fill="#8884d8"
                     dataKey="count"
-                    label={({ category, percent }) => `${category} ${(percent * 100).toFixed(0)}%`}
+                    nameKey="category"
                   >
                     {stats.testCategories.map((entry: any, index: number) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
                   <Tooltip />
+                  <Legend wrapperStyle={{ fontSize: '11px' }} iconSize={8} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
@@ -385,18 +385,18 @@ export default function DashboardPage() {
                   <Pie
                     data={stats.complianceDistribution.slice(0, 6)}
                     cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={80}
+                    cy="45%"
+                    outerRadius={60}
                     fill="#8884d8"
                     dataKey="value"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    nameKey="name"
                   >
                     {stats.complianceDistribution.slice(0, 6).map((entry: any, index: number) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
                   <Tooltip />
+                  <Legend wrapperStyle={{ fontSize: '11px' }} iconSize={8} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (

@@ -38,11 +38,6 @@ export class GoogleGenerativeAI {
 
     // Map Gemini model names to Vertex AI model names
     let modelName = config.model
-    if (modelName === 'gemini-2.0-flash-lite' || modelName === 'gemini-1.5-flash') {
-      modelName = 'gemini-1.5-flash'
-    } else if (modelName === 'gemini-1.5-pro' || modelName === 'gemini-pro') {
-      modelName = 'gemini-1.5-pro'
-    }
 
     const vertexModel = vertex.preview.getGenerativeModel({
       model: modelName,

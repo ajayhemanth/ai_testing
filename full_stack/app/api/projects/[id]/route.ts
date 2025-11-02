@@ -122,9 +122,19 @@ export async function DELETE(
 ) {
   const { id } = await params
   try {
-    await prisma.project.delete({
-      where: { id },
-    })
+    // Delete all related records first
+    await prisma.$transaction([
+      prisma.testCase.deleteMany({ where: { projectId: id } }),
+      prisma.requirement.deleteMany({ where: { projectId: id } }),
+      prisma.syntheticData.deleteMany({ where: { projectId: id } }),
+      prisma.apiTest.deleteMany({ where: { projectId: id } }),
+      prisma.integration.deleteMany({ where: { projectId: id } }),
+      prisma.complianceCheck.deleteMany({ where: { projectId: id } }),
+      prisma.devOpsMetric.deleteMany({ where: { projectId: id } }),
+      prisma.activity.deleteMany({ where: { projectId: id } }),
+      prisma.dataGeneration.deleteMany({ where: { projectId: id } }),
+      prisma.project.delete({ where: { id } }),
+    ])
 
     return NextResponse.json({ message: 'Project deleted successfully' })
   } catch (error) {

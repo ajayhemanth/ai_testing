@@ -77,61 +77,68 @@ export async function POST(request: NextRequest) {
       targetUsers: ['Healthcare Professionals', 'Patients', 'Administrators']
     }
 
-    // Generate test cases for all requirements
-    const testCasesMap = await generateTestCasesForMultipleRequirements(
-      requirements,
-      projectContext,
-      apiKey
-    )
-
-    // Store test cases in database
-    const createdTestCases = []
+    // Generate test cases in batches to avoid SSL packet size issues
     let totalCreated = 0
+    const batchSize = 1
 
-    for (const [requirementId, testCases] of testCasesMap) {
-      for (const testCase of testCases) {
-        try {
-          // Convert steps array to string
-          const stepsText = Array.isArray(testCase.steps)
-            ? testCase.steps.map((step, idx) => `${idx + 1}. ${step}`).join('\n')
-            : testCase.steps
+    for (let i = 0; i < requirements.length; i += batchSize) {
+      const batch = requirements.slice(i, i + batchSize)
 
-          // Combine preconditions and test data into the description
-          const fullDescription = [
-            testCase.description,
-            testCase.preconditions ? `\n\nPreconditions:\n${testCase.preconditions}` : '',
-            testCase.testData ? `\n\nTest Data:\n${testCase.testData}` : ''
-          ].join('')
+      console.log(`Processing batch ${Math.floor(i / batchSize) + 1}: ${batch.length} requirements`)
 
-          const created = await prisma.testCase.create({
-            data: {
-              requirementId,
-              title: testCase.title,
-              description: fullDescription,
-              category: testCase.type || 'functional',
-              priority: testCase.priority || 'medium',
-              status: 'pending',
-              testSteps: stepsText || '',
-              expectedResults: testCase.expectedResult || '',
-              actualResults: '',
-              automationStatus: 'manual',
-              projectId, // Add projectId directly to test case
-            }
-          })
+      // Generate test cases for this batch
+      const testCasesMap = await generateTestCasesForMultipleRequirements(
+        batch,
+        projectContext,
+        apiKey
+      )
 
-          createdTestCases.push(created)
-          totalCreated++
-        } catch (error) {
-          console.error('Failed to create test case:', error, testCase)
+      // Store test cases in database
+      for (const [requirementId, testCases] of testCasesMap) {
+        for (const testCase of testCases) {
+          try {
+            // Convert steps array to string
+            const stepsText = Array.isArray(testCase.steps)
+              ? testCase.steps.map((step, idx) => `${idx + 1}. ${step}`).join('\n')
+              : testCase.steps
+
+            // Combine preconditions and test data into the description
+            const fullDescription = [
+              testCase.description,
+              testCase.preconditions ? `\n\nPreconditions:\n${testCase.preconditions}` : '',
+              testCase.testData ? `\n\nTest Data:\n${testCase.testData}` : ''
+            ].join('')
+
+            await prisma.testCase.create({
+              data: {
+                requirementId,
+                title: testCase.title,
+                description: fullDescription,
+                category: testCase.type || 'functional',
+                priority: testCase.priority || 'medium',
+                status: 'pending',
+                testSteps: stepsText || '',
+                expectedResults: testCase.expectedResult || '',
+                actualResults: '',
+                automationStatus: 'manual',
+                projectId,
+              }
+            })
+
+            totalCreated++
+          } catch (error) {
+            console.error('Failed to create test case:', error, testCase)
+          }
         }
       }
+
+      console.log(`Batch complete. Total test cases created so far: ${totalCreated}`)
     }
 
     return NextResponse.json({
       success: true,
       message: `Successfully generated ${totalCreated} test cases for ${requirements.length} requirements`,
       count: totalCreated,
-      testCases: createdTestCases,
       requirementsProcessed: requirements.length
     })
 

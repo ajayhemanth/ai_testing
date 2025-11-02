@@ -1,17 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { writeFile, mkdir } from 'fs/promises'
+import { writeFile, mkdir, readFile } from 'fs/promises'
 import path from 'path'
+import os from 'os'
 import { progressStore } from '@/lib/progress-store'
 import { convertDocumentToImages } from '@/lib/document-processors/convert-to-image'
+import { uploadToGCS } from '@/lib/storage'
 import { v4 as uuidv4 } from 'uuid'
 
 export async function POST(request: NextRequest) {
-  const documentId = uuidv4()
-
+  let documentId = ''
   try {
     const formData = await request.formData()
     const files = formData.getAll('files') as File[]
     const projectId = formData.get('projectId') as string
+    documentId = formData.get('documentId') as string || uuidv4()  // Use client-provided ID or generate
 
     if (!projectId) {
       return NextResponse.json(
@@ -47,9 +49,9 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Create upload directories
-    const uploadDir = path.join(process.cwd(), 'uploads', documentId)
-    const imageDir = path.join(uploadDir, 'images')
+    // Create temporary directories for processing
+    const tempDir = path.join(os.tmpdir(), `doc-${documentId}`)
+    const imageDir = path.join(tempDir, 'images')
     await mkdir(imageDir, { recursive: true })
 
     const uploadedDocuments = []
@@ -68,11 +70,15 @@ export async function POST(request: NextRequest) {
         details: { fileName: file.name }
       })
 
-      // Save uploaded file
+      // Upload file to GCS
       const bytes = await file.arrayBuffer()
       const buffer = Buffer.from(bytes)
-      const filePath = path.join(uploadDir, file.name)
-      await writeFile(filePath, buffer)
+      const gcsPath = `${projectId}/${documentId}/${file.name}`
+      await uploadToGCS(buffer, gcsPath, file.type)
+
+      // Save to temp for processing
+      const tempFilePath = path.join(tempDir, file.name)
+      await writeFile(tempFilePath, buffer)
 
       // Convert to images
       progressStore.addUpdate(documentId, {
@@ -85,16 +91,28 @@ export async function POST(request: NextRequest) {
       })
 
       const fileExt = path.extname(file.name).toLowerCase().substring(1)
-      const conversionResult = await convertDocumentToImages(filePath, fileExt)
+      const conversionResult = await convertDocumentToImages(tempFilePath, fileExt)
+
+      // Upload images to GCS and store just the filenames
+      const imageFilenames: string[] = []
+      if (conversionResult.imagePaths) {
+        for (const imagePath of conversionResult.imagePaths) {
+          const imageBuffer = await readFile(imagePath)
+          const imageName = path.basename(imagePath)
+          const imageGcsPath = `${projectId}/${documentId}/images/${imageName}`
+          await uploadToGCS(imageBuffer, imageGcsPath, 'image/png')
+          imageFilenames.push(imageName)
+        }
+      }
 
       totalPages += conversionResult.pageCount
 
       uploadedDocuments.push({
         originalName: file.name,
-        filePath,
+        gcsPath: gcsPath,
         fileType: fileExt,
         pageCount: conversionResult.pageCount,
-        imagePaths: conversionResult.imagePaths || []
+        imagePaths: imageFilenames
       })
     }
 

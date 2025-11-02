@@ -6,23 +6,24 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { toast } from "sonner"
 import { CheckCircle2, XCircle, Upload, RefreshCw, GitBranch, Bug } from "lucide-react"
 
 interface TestCase {
-  id: number
+  id: string
   title: string
   status: string
   priority: string
   compliance: string[]
-  requirementId: number
-  projectId: number
+  requirementId?: string
+  projectId: string
   jiraId?: string
   azureId?: string
 }
 
 interface Project {
-  id: number
+  id: string
   name: string
 }
 
@@ -81,7 +82,7 @@ export default function DevOpsIntegrationPage() {
     }
   }
 
-  const syncToJira = async (testCaseId?: number) => {
+  const syncToJira = async (testCaseId?: string) => {
     setSyncing(true)
     try {
       const endpoint = testCaseId
@@ -105,7 +106,7 @@ export default function DevOpsIntegrationPage() {
     }
   }
 
-  const syncToAzure = async (testCaseId?: number) => {
+  const syncToAzure = async (testCaseId?: string) => {
     setSyncing(true)
     try {
       const endpoint = testCaseId
@@ -131,7 +132,7 @@ export default function DevOpsIntegrationPage() {
 
   const filteredTestCases = selectedProject === "all"
     ? testCases
-    : testCases.filter(tc => tc.projectId === parseInt(selectedProject))
+    : testCases.filter(tc => tc.projectId === selectedProject)
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -149,7 +150,7 @@ export default function DevOpsIntegrationPage() {
           <SelectContent>
             <SelectItem value="all">All Projects</SelectItem>
             {projects.map((project) => (
-              <SelectItem key={project.id} value={project.id.toString()}>
+              <SelectItem key={project.id} value={project.id}>
                 {project.name}
               </SelectItem>
             ))}
@@ -209,55 +210,64 @@ export default function DevOpsIntegrationPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <GitBranch className="h-5 w-5" />
-              Azure DevOps Integration
-            </CardTitle>
-            <CardDescription>
-              Sync test cases with Azure DevOps work items
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Status</span>
-                {azureStatus.connected ? (
-                  <Badge variant="default" className="gap-1">
-                    <CheckCircle2 className="h-3 w-3" />
-                    Connected
-                  </Badge>
-                ) : (
-                  <Badge variant="secondary" className="gap-1">
-                    <XCircle className="h-3 w-3" />
-                    Not Connected
-                  </Badge>
-                )}
-              </div>
-              {azureStatus.lastSync && (
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Last Sync</span>
-                  <span className="text-sm text-muted-foreground">
-                    {new Date(azureStatus.lastSync).toLocaleString()}
-                  </span>
-                </div>
-              )}
-              <Button
-                className="w-full"
-                onClick={() => syncToAzure()}
-                disabled={syncing}
-              >
-                {syncing ? (
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Upload className="h-4 w-4 mr-2" />
-                )}
-                Sync Test Cases (Batch of 5)
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Card className="opacity-50 cursor-not-allowed">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <GitBranch className="h-5 w-5" />
+                    Azure DevOps Integration
+                  </CardTitle>
+                  <CardDescription>
+                    Sync test cases with Azure DevOps work items
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Status</span>
+                      {azureStatus.connected ? (
+                        <Badge variant="default" className="gap-1">
+                          <CheckCircle2 className="h-3 w-3" />
+                          Connected
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="gap-1">
+                          <XCircle className="h-3 w-3" />
+                          Not Connected
+                        </Badge>
+                      )}
+                    </div>
+                    {azureStatus.lastSync && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">Last Sync</span>
+                        <span className="text-sm text-muted-foreground">
+                          {new Date(azureStatus.lastSync).toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+                    <Button
+                      className="w-full"
+                      onClick={() => syncToAzure()}
+                      disabled={true}
+                    >
+                      {syncing ? (
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Upload className="h-4 w-4 mr-2" />
+                      )}
+                      Sync Test Cases (Batch of 5)
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Azure tokens over</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
 
       {/* Test Cases Table */}
@@ -285,7 +295,7 @@ export default function DevOpsIntegrationPage() {
                       <div className="flex gap-2">
                         <Badge variant="outline">{testCase.status}</Badge>
                         <Badge variant="outline">{testCase.priority}</Badge>
-                        {testCase.compliance.map((tag) => (
+                        {testCase.compliance && testCase.compliance.map((tag) => (
                           <Badge key={tag} variant="secondary">{tag}</Badge>
                         ))}
                       </div>
@@ -313,14 +323,24 @@ export default function DevOpsIntegrationPage() {
                       >
                         Sync to Jira
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => syncToAzure(testCase.id)}
-                        disabled={syncing}
-                      >
-                        Sync to Azure
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => syncToAzure(testCase.id)}
+                              disabled={true}
+                              className="opacity-50"
+                            >
+                              Sync to Azure
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Azure tokens over</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   </div>
                 </div>

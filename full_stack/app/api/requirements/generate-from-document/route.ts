@@ -101,18 +101,40 @@ export async function POST(request: NextRequest) {
     let testCaseMessage = ''
     if (createdRequirements.length > 0) {
       try {
-        const testCaseResponse = await fetch(`${request.url.replace('/requirements/generate-from-document', '/test-cases/generate-from-requirements')}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            projectId,
-            requirementIds: createdRequirements.map(r => r.id)
-          })
-        })
+        // Get the base URL from headers or use localhost as fallback
+        const host = request.headers.get('host') || 'localhost:3000'
+        const protocol = request.headers.get('x-forwarded-proto') || 'https'
+        const baseUrl = `${protocol}://${host}`
 
-        if (testCaseResponse.ok) {
-          const testCaseResult = await testCaseResponse.json()
-          testCaseMessage = ` and ${testCaseResult.count} test cases`
+        // Use AbortController to set a longer timeout (10 minutes)
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 600000) // 10 minutes
+
+        try {
+          const testCaseResponse = await fetch(`${baseUrl}/api/test-cases/generate-from-requirements`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              projectId,
+              requirementIds: createdRequirements.map(r => r.id)
+            }),
+            signal: controller.signal
+          })
+
+          clearTimeout(timeout)
+
+          if (testCaseResponse.ok) {
+            const testCaseResult = await testCaseResponse.json()
+            testCaseMessage = ` and ${testCaseResult.count} test cases`
+          }
+        } catch (fetchError: any) {
+          clearTimeout(timeout)
+          if (fetchError.name === 'AbortError') {
+            console.log('Test case generation timeout - running in background')
+            testCaseMessage = ' (test cases are being generated in background)'
+          } else {
+            throw fetchError
+          }
         }
       } catch (error) {
         console.error('Failed to generate test cases:', error)

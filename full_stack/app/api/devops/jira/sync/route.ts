@@ -90,7 +90,7 @@ export async function POST() {
             issuetype: {
               name: "Task"
             },
-            labels: testCase.compliance ? testCase.compliance.split(",") : []
+            labels: testCase.compliance ? testCase.compliance.split(",").map(t => t.trim()) : []
           }
         }
 

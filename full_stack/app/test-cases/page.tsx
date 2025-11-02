@@ -111,7 +111,8 @@ export default function TestCasesPage() {
     fetch('/api/projects')
       .then(res => res.json())
       .then(data => {
-        setProjects(data.projects || [])
+        // API returns array directly, not wrapped in { projects: [] }
+        setProjects(Array.isArray(data) ? data : [])
       })
       .catch(err => {
         console.error('Failed to fetch projects:', err)
@@ -148,13 +149,13 @@ export default function TestCasesPage() {
       }
 
       // Priority filter
-      const matchesPriority = selectedPriority === "all" || tc.priority === selectedPriority
+      const matchesPriority = selectedPriority === "all" || tc.priority?.toLowerCase() === selectedPriority
 
       // Status filter
-      const matchesStatus = selectedStatus === "all" || tc.status === selectedStatus
+      const matchesStatus = selectedStatus === "all" || tc.status?.toLowerCase() === selectedStatus
 
       // Category filter
-      const matchesCategory = selectedCategory === "all" || tc.category === selectedCategory
+      const matchesCategory = selectedCategory === "all" || tc.category?.toLowerCase() === selectedCategory
 
       // Project filter
       const matchesProject = selectedProject === "all" || tc.projectId === selectedProject
@@ -464,7 +465,7 @@ export default function TestCasesPage() {
           </p>
         </div>
         <div className="flex space-x-3">
-          <Button variant="outline" onClick={handleExecuteTests} disabled={isExecuting}>
+          <Button variant="outline" onClick={handleExecuteTests} disabled={true} className="opacity-50 cursor-not-allowed">
             {isExecuting ? (
               <>
                 <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
@@ -480,7 +481,7 @@ export default function TestCasesPage() {
 
           <Dialog open={isGenerateOpen} onOpenChange={setIsGenerateOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button disabled className="opacity-50 cursor-not-allowed">
                 <Sparkles className="mr-2 h-4 w-4" />
                 Generate with AI
               </Button>
@@ -761,7 +762,24 @@ export default function TestCasesPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {getFilteredTestCases(tab).map((testCase) => (
+                        {loading ? (
+                          <TableRow>
+                            <TableCell colSpan={10} className="h-64">
+                              <div className="flex flex-col items-center justify-center h-full">
+                                <RefreshCw className="h-8 w-8 animate-spin text-primary mb-4" />
+                                <p className="text-sm font-medium">Loading test cases...</p>
+                                <p className="text-xs text-muted-foreground">Please wait while we fetch your data</p>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ) : getFilteredTestCases(tab).length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={10} className="h-64 text-center">
+                              <p className="text-muted-foreground">No test cases found</p>
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          getFilteredTestCases(tab).map((testCase) => (
                         <TableRow
                           key={testCase.id}
                           className="cursor-pointer"
@@ -846,7 +864,7 @@ export default function TestCasesPage() {
                             </div>
                           </TableCell>
                         </TableRow>
-                      ))}
+                      )))}
                     </TableBody>
                   </Table>
                 </TabsContent>

@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { GoogleGenerativeAI } from '@/lib/vertex-ai-wrapper'
 import fs from 'fs/promises'
 import { progressStore } from '@/lib/progress-store'
 

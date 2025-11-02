@@ -66,7 +66,7 @@ Generate questions in JSON format:
     {
       "id": "unique-id-based-on-gap",
       "category": "critical|important|optional",
-      "type": "single|multiple|text|cards",
+      "type": "single|multiple|cards",
       "question": "Specific question about the gap",
       "reason": "Detailed explanation of why this matters for compliance and testing",
       "documentContext": "What the document mentioned that prompted this question",

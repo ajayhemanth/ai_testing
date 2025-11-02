@@ -582,12 +582,12 @@ export function DocumentGapQuestionnaire({
           <div className="flex flex-col items-center space-y-4">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
             <div className="text-center space-y-2">
-              <p className="text-lg font-semibold">Generating Requirements</p>
+              <p className="text-lg font-semibold">Generating Requirements and Test Cases</p>
               <p className="text-sm text-muted-foreground">
                 Analyzing your answers and document content...
               </p>
               <p className="text-xs text-muted-foreground">
-                This may take a few moments
+                This may take 5 to 10 mins
               </p>
             </div>
           </div>

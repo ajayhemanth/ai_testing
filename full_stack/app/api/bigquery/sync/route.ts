@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 
         data = testCases.map(item => ({
           id: item.id,
-          test_case_id: null,  // TestCase model doesn't have testCaseId field
+          test_case_id: null, // TestCase model doesn't have testCaseId field
           requirement_id: item.requirementId || null,
           project_id: item.projectId,
           project_name: item.project.name,
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
           expected_results: item.expectedResults || null,
           priority: item.priority || null,
           category: item.category || null,
-          compliance_tags: item.compliance || null,  // Using compliance field
+          compliance_tags: item.compliance || null, // Using compliance field
           status: item.status || null,
           created_at: item.createdAt.toISOString(),
           updated_at: item.updatedAt.toISOString()
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
 
         data = requirements.map(item => ({
           id: item.id,
-          requirement_id: null,  // Requirement model doesn't have requirementId field
+          requirement_id: null, // Requirement model doesn't have requirementId field
           project_id: item.projectId,
           project_name: item.project.name,
           title: item.title,

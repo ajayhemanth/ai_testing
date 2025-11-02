@@ -29,6 +29,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   Select,
   SelectContent,
@@ -68,6 +69,7 @@ import {
   Lightbulb,
   Save,
   X,
+  Loader2,
 } from "lucide-react"
 import { useDropzone } from "react-dropzone"
 import { toast } from "sonner"
@@ -667,10 +669,16 @@ export default function RequirementsPage() {
           description: `Created ${result.count} requirements based on document analysis${gapAnswers ? ' and your answers' : ''}.`,
         })
 
-        // Refresh requirements list
-        fetch('/api/requirements')
-          .then(res => res.json())
-          .then(data => setRequirements(data.requirements || data || []))
+        // Force refresh requirements list
+        try {
+          const reqResponse = await fetch('/api/requirements', { cache: 'no-store' })
+          if (reqResponse.ok) {
+            const data = await reqResponse.json()
+            setRequirements(data.requirements || data || [])
+          }
+        } catch (error) {
+          console.error('Failed to refresh requirements:', error)
+        }
       } else {
         throw new Error('Failed to generate requirements')
       }
@@ -691,7 +699,7 @@ export default function RequirementsPage() {
     const totalGaps = Object.keys(answers).length
 
     toast.info("Generating comprehensive requirements...", {
-      description: `Using document content and ${filledGaps} answered questions...`,
+      description: `Using document content and ${filledGaps} answered questions. This may take 5-10 minutes...`,
     })
 
     // Store the processing details to use with gap answers
@@ -705,7 +713,7 @@ export default function RequirementsPage() {
 
   const handleDocumentGapsSkip = async () => {
     toast.info("Generating requirements from document only...", {
-      description: "Some requirements may be less detailed without additional context.",
+      description: "This may take 5-10 minutes. Some requirements may be less detailed without additional context.",
     })
 
     const processingDetails = {
@@ -1005,11 +1013,10 @@ export default function RequirementsPage() {
       </div>
 
       {loading ? (
-        <div className="p-8 text-center">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mx-auto mb-4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
-          </div>
+        <div className="p-12 text-center">
+          <Loader2 className="h-12 w-12 mx-auto mb-4 text-primary animate-spin" />
+          <p className="text-lg font-medium text-muted-foreground">Loading requirements...</p>
+          <p className="text-sm text-muted-foreground mt-2">Please wait while we fetch your data</p>
         </div>
       ) : (
         <div className="overflow-x-auto rounded-md border">
@@ -1161,10 +1168,10 @@ export default function RequirementsPage() {
           </p>
         </div>
         <div className="flex space-x-3">
-          <Button onClick={() => setIsCreateOpen(true)}>
+          {/* <Button onClick={() => setIsCreateOpen(true)} disabled className="opacity-50 cursor-not-allowed">
             <Plus className="mr-2 h-4 w-4" />
             Add Requirement
-          </Button>
+          </Button> */}
           <Dialog open={isUploadOpen} onOpenChange={(open) => {
             setIsUploadOpen(open)
             if (!open) {
@@ -1230,13 +1237,21 @@ export default function RequirementsPage() {
                       </DialogDescription>
                     </DialogHeader>
                     <div className="py-4 space-y-4">
+                      {!uploadProjectId && (
+                        <Alert variant="destructive">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription>
+                            Please select a project before uploading documents
+                          </AlertDescription>
+                        </Alert>
+                      )}
                       <div className="space-y-2">
                         <Label htmlFor="upload-project">Project *</Label>
                         <Select
                           value={uploadProjectId}
                           onValueChange={setUploadProjectId}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className={!uploadProjectId ? "border-red-500" : ""}>
                             <SelectValue placeholder="Select a project for these requirements" />
                           </SelectTrigger>
                           <SelectContent>
@@ -1264,7 +1279,7 @@ export default function RequirementsPage() {
                               Drag & drop files here, or click to select
                             </p>
                             <p className="text-xs text-muted-foreground mt-2">
-                              Supports PDF, Word, TXT, and Markdown files
+                              Supports PDF, TXT, and Markdown files
                             </p>
                           </div>
                         )}
@@ -1296,13 +1311,15 @@ export default function RequirementsPage() {
             </DialogContent>
           </Dialog>
 
-          <Dialog open={isGenerateOpen} onOpenChange={setIsGenerateOpen}>
+          {/* <Dialog open={isGenerateOpen} onOpenChange={setIsGenerateOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button disabled className="opacity-50 cursor-not-allowed">
                 <Sparkles className="mr-2 h-4 w-4" />
                 AI Generate
               </Button>
-            </DialogTrigger>
+            </DialogTrigger> */}
+            {/* Commenting out AI Generate button and keeping dialog for future use */}
+          <Dialog open={isGenerateOpen} onOpenChange={setIsGenerateOpen}>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
               <AnimatePresence mode="wait">
                 {!showGuidedFlow && !generationMode ? (
